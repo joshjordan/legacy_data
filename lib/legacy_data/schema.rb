@@ -1,7 +1,7 @@
 module LegacyData
   class Schema
     attr_reader :table_name
-    
+
     def self.analyze(options={})
       initialize_tables(options[:table_name])
 
@@ -9,8 +9,8 @@ module LegacyData
         table_definitions[table_name] = analyze_table(table_name)
 
         unless options[:skip_associated]
-          [:has_many, :belongs_to].each do |relation_type| 
-            associated_tables = table_definitions[table_name][:relations][relation_type].keys.map(&:to_s) 
+          [:has_many, :belongs_to].each do |relation_type|
+            associated_tables = table_definitions[table_name][:relations][relation_type].keys.map(&:to_s)
             associated_tables.each {|associated_table| add_pending_table(associated_table) }
           end
         end
@@ -21,8 +21,8 @@ module LegacyData
     def self.analyze_table table_name
       new(table_name).analyze_table
     end
-    
-    
+
+
     def self.initialize_tables(table_name)
       clear_table_definitions
       if table_name
@@ -62,11 +62,11 @@ module LegacyData
         table_definitions[table].convert_has_many_to_habtm(join_table)
       end
     end
-    
+
     def initialize(table_name)
       @table_name = table_name
     end
-    
+
     def analyze_table
       log "analyzing #{table_name} => #{class_name}"
       TableDefinition.new(:table_name   => table_name,
@@ -76,11 +76,11 @@ module LegacyData
                           :constraints  => constraints
                           )
     end
-    
-    def self.tables 
+
+    def self.tables
       connection.tables.sort
     end
-    
+
     def class_name
       TableClassNameMapper.class_name_for(self.table_name)
     end
@@ -103,7 +103,7 @@ module LegacyData
         :has_and_belongs_to_many  => {}
       }
     end
-    
+
     def belongs_to_relations
       return {} unless connection.respond_to? :foreign_keys
 
@@ -129,7 +129,7 @@ module LegacyData
     def constraints
       if @constraints.nil?
         @constraints = {}
-      
+
         @constraints[:unique],           @constraints[:multi_column_unique] = uniqueness_constraints
         boolean_presence_columns,        @constraints[:presence_of]         = presence_constraints
         @constraints[:numericality_of]                                      = numericality_constraints
@@ -141,37 +141,37 @@ module LegacyData
       ##### TO DO
       # presence_of schoolparentid => school_parent     - FOREIGN KEY
     end
-    
+
     def numericality_constraints
-      allow_nil, do_not_allow_nil = integer_columns.partition do |column| 
+      allow_nil, do_not_allow_nil = integer_columns.partition do |column|
         column.null
       end
       {:allow_nil=>allow_nil.map(&:name), :do_not_allow_nil=>do_not_allow_nil.map(&:name)}
     end
 
     def uniqueness_constraints
-      unique, multi_column_unique = unique_constraints.partition do |columns| 
+      unique, multi_column_unique = unique_constraints.partition do |columns|
         columns.size == 1
       end
-      [unique.map(&:first), multi_column_unique] 
+      [unique.map(&:first), multi_column_unique]
     end
 
     def presence_constraints
-      boolean_presence, presence_of = non_nullable_constraints.partition do |column_name| 
-        column_by_name(column_name).type == :boolean 
+      boolean_presence, presence_of = non_nullable_constraints.partition do |column_name|
+        column_by_name(column_name).type == :boolean
       end
     end
 
     def column_by_name name
       columns.detect {|column| column.name == name }
     end
-    
+
     def integer_columns
       columns.select {|column| column.type == :integer }.reject {|column| column.name == primary_key}
     end
 
     def columns
-      @columns ||= connection.columns(table_name, "#{table_name} Columns")
+      @columns ||= connection.columns(table_name)
     end
     def column_names
       columns.map(&:name)
@@ -184,7 +184,7 @@ module LegacyData
     def unique_constraints
       connection.indexes(table_name).select(&:unique).map(&:columns)
     end
-    
+
     def custom_constraints
       return [{}, {}] unless connection.respond_to? :constraints
       custom_constraints, inclusion_constraints = {}, {}
@@ -197,7 +197,7 @@ module LegacyData
         end
       end
       [custom_constraints, inclusion_constraints]
-    end    
+    end
 
     def log msg
       self.class.log msg
@@ -205,14 +205,14 @@ module LegacyData
     def self.log msg
       puts msg
     end
-    
+
     private
-    def self.connection 
+    def self.connection
       ActiveRecord::Base.connection
     end
     def connection
       self.class.connection
     end
-    
+
   end
 end

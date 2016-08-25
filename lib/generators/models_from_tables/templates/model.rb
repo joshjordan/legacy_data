@@ -1,4 +1,4 @@
-class <%= @definition.class_name -%> < ActiveRecord::Base
+class <%= @definition.class_name -%> < ApplicationRecord
 <%= "  set_table_name  #{@definition.table_name.downcase.to_sym.inspect}\n" if @definition.unconventional_table_name?  -%>
 <%= "  set_primary_key #{@definition.primary_key.to_sym.inspect}\n"         if @definition.unconventional_primary_key? -%>
 
@@ -8,4 +8,3 @@ class <%= @definition.class_name -%> < ActiveRecord::Base
   # Constraints
   <%= @definition.constraints_to_s   %>
 end
-
